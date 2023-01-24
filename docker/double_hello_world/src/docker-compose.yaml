@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  deno1:
+    container_name: deno_hello_world1
+    image: deno
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    ports:
+      - "${PORT1}:${PORT1}"
+    environment:
+      - PORT=${PORT1}
+  deno2:
+    container_name: deno_hello_world2
+    image: deno
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    ports:
+      - "${PORT2}:${PORT2}"
+    environment:
+      - PORT=${PORT2}
