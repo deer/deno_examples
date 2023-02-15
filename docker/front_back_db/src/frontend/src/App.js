@@ -5,7 +5,6 @@ function App() {
   async function apiTest() {
     const res = await fetch('http://localhost:8000/api/');
     const json = await res.json();
-    setTodos(json);
 }
 
   return (

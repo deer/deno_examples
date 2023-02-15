@@ -13,10 +13,11 @@ services:
       MONGO_INITDB_DATABASE: ${INIT_DB}
     volumes:
       - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-
   backend:
     build: ./backend
     container_name: backend
+    environment:
+      MONGODB_URI: mongodb://${INIT_USER}:${INIT_PASSWORD}@mongodb:27017/
     ports:
       - "8000:8000"
     volumes:
