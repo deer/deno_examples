@@ -3,20 +3,26 @@ version: "3.9"
 services:
   mongodb:
     image: mongo
+    container_name: mongodb
     restart: always
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: thisIsSecure
-      MONGO_INITDB_DATABASE: dinosaurs
+      MONGO_INITDB_ROOT_USERNAME: ${INIT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${INIT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${INIT_DB}
+    volumes:
+      - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
   backend:
     build: ./backend
+    container_name: backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
   frontend:
     build: ./frontend
+    container_name: frontend
     ports:
       - "3000:3000"
