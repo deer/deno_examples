@@ -7,7 +7,7 @@ const backend_port = 8000;
 
 app.use(
   oakCors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000"],
   }),
 );
 
