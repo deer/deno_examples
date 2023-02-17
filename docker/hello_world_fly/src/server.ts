@@ -1,11 +1,78 @@
 import { serve } from "https://deno.land/std@0.173.0/http/server.ts";
+import { load } from "https://deno.land/std@0.173.0/dotenv/mod.ts";
 
-serve((req: Request) => {
-  // this won't work locally, since this header isn't set
-  // but since this is intended for fly, i suppose this is ok
-  console.log(req.headers.get("x-forwarded-for"));
-  console.log();
-  return new Response("Hello world from Deno! 🦕");
+const { APP_ID, URI_STUB, DATA_SOURCE, DATA_API_KEY, DB_NAME, COLLECTION_NAME } = await load({ envPath: "./src/.env" });
+const BASE_URI = `${URI_STUB}${APP_ID}/endpoint/data/v1/action`
+
+const options = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "api-key": DATA_API_KEY,
+  },
+  body: "",
+};
+
+type resultSchema = {
+  documents: {
+    _id: string;
+    visitsPerHost: number
+  }[]
+}
+
+serve(async (req: Request) => {
+  // if it's a favicon request, don't do anything
+  if (req.url.includes("favicon")) {
+    return new Response();
+  }
+
+  const forwardedHost = req.headers.get("x-forwarded-for") || "";
+  const split = forwardedHost.split(",")[0];
+  const host = split != "" ? split : "localhost";
+  await postNewConnection(host);
+
+  const result = await getConnectionRecords() as resultSchema;
+
+  const yourVisits = result.documents.find(x => x._id === host)?.visitsPerHost;
+  const totalVisits = result.documents.map(x => x.visitsPerHost).reduce((a, b) => a + b);
+
+  return new Response(
+    `Hello ${host}!\nThis page has been visited ${totalVisits} times. You've visited ${yourVisits} times.`,
+  );
 }, { port: 8080 });
 
-console.log(`HTTP server is running at: http://localhost:8080/`);
+const getConnectionRecords = async () => {
+  try {
+    const URI = `${BASE_URI}/aggregate`;
+    const query = {
+      dataSource: DATA_SOURCE,
+      database: DB_NAME,
+      collection: COLLECTION_NAME,
+      pipeline: [{ $group: { _id: "$host", visitsPerHost: { $count: {} } } }],
+    };
+    options.body = JSON.stringify(query);
+    const dataResponse = await fetch(URI, options);
+    const allConnectionRecords = await dataResponse.json();
+    return allConnectionRecords;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const postNewConnection = async (host: string) => {
+  try {
+    const URI = `${BASE_URI}/insertOne`;
+    const query = {
+      dataSource: DATA_SOURCE,
+      database: DB_NAME,
+      collection: COLLECTION_NAME,
+      document: { host: host }
+    };
+    options.body = JSON.stringify(query);
+    const dataResponse = await fetch(URI, options);
+    const result = await dataResponse.json();
+    return result;
+  } catch (err) {
+    console.log(err);
+  }
+};

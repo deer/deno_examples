@@ -4,7 +4,6 @@ services:
   deno:
     container_name: deno_hello_world
     image: deno
-    restart: always
     build:
       context: .
       dockerfile: Dockerfile
