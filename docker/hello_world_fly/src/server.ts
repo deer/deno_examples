@@ -1,7 +1,13 @@
 import { serve } from "https://deno.land/std@0.173.0/http/server.ts";
-import { load } from "https://deno.land/std@0.173.0/dotenv/mod.ts";
+// import { load } from "https://deno.land/std@0.173.0/dotenv/mod.ts";
 
-const { APP_ID, URI_STUB, DATA_SOURCE, DATA_API_KEY, DB_NAME, COLLECTION_NAME } = await load({ envPath: "./src/.env" });
+//const { APP_ID, URI_STUB, DATA_SOURCE, DATA_API_KEY, DB_NAME, COLLECTION_NAME } = await load({ envPath: "./src/.env" });
+const APP_ID = Deno.env.get("APP_ID");
+const URI_STUB = Deno.env.get("URI_STUB");
+const DATA_SOURCE = Deno.env.get("DATA_SOURCE");
+const DATA_API_KEY = Deno.env.get("DATA_API_KEY")!;
+const DB_NAME = Deno.env.get("DB_NAME");
+const COLLECTION_NAME = Deno.env.get("COLLECTION_NAME");
 const BASE_URI = `${URI_STUB}${APP_ID}/endpoint/data/v1/action`
 
 const options = {
@@ -29,6 +35,7 @@ serve(async (req: Request) => {
   const forwardedHost = req.headers.get("x-forwarded-for") || "";
   const split = forwardedHost.split(",")[0];
   const host = split != "" ? split : "localhost";
+  console.log(host);
   await postNewConnection(host);
 
   const result = await getConnectionRecords() as resultSchema;
